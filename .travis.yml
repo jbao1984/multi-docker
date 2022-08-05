@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jbao19/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true jbao19/react-test npm test -- --coverage 
+
+after_success:
+  - docker build -t jbao19/multi-client ./client
+  - docker build -t jbao19/multi-nginx ./nginx
+  - docker build -t jbao19/multi-server ./server
+  - docker build -t jbao19/multi-worker ./worker
+  # log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to docker hub
+  - docker push jbao19/multi-client
+  - docker push jbao19/multi-nginx
+  - docker push jbao19/multi-server
+  - docker push jbao19/multi-worker
+
